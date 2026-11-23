@@ -784,17 +784,16 @@ function vEdit(s: VSection, strict: boolean): Edit {
     let lines = f.lines;
     let cursor = 0;
     for (const ch of s.chunks) {
-      // The anchor is the chunk's landmark line: O is searched from the anchor
-      // line itself, because the chunk's first context line may be that very
-      // line (a chunk anchored at `a` whose body opens with ` a` edits from
-      // `a` on). An empty O, though, is inserted at the cursor, which the
-      // anchor moves past the anchor line.
+      // The anchor is the chunk's landmark line (SPEC section 8): it is found
+      // first, then the cursor moves past the anchor line, and O is searched
+      // only at or after that cursor (exclusive). An empty O is likewise
+      // inserted at the cursor, past the anchor line.
       let searchFrom = cursor;
       let insertAt = cursor;
       if (ch.anchor !== null) {
         const found = findFirstTier([ch.anchor], lines, strict, cursor, false);
         if (found === null) throw new Fail('no-match', s.path);
-        searchFrom = found.positions[0]!;
+        searchFrom = found.positions[0]! + 1;
         insertAt = found.positions[0]! + 1;
       }
       const { O, N } = bodyON(ch.body);
